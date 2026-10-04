@@ -1,0 +1,57 @@
+json.loads() —— JSON字符串 → Python字典 / 列表
+data = json.loads(data)
+# • 用法：将符合 JSON 格式的字符串解析为 Python 原生数据类型（字典 dict 或列表 list）。
+# • 参数：接收一个 str 类型的 JSON 字符串。
+# • 返回值：Python 字典或列表。
+# • 原理：
+# 1. 解析 JSON 字符串的语法结构（键值对、数组、字符串、数字等）。
+# 2. 按照映射关系转换：{...} → dict，[...] → list，"string" → str，123 → int/float，true/false → True/False，null → None。
+# 3. 方便后续在 Python 中用字典/列表的方式操作数据。
+
+
+json.dumps() —— Python对象 → JSON字符串
+data = json.dumps(data)
+print(data)
+print(type(data))  # 输出 <class 'str'>
+# • 用法：将 Python 可序列化对象（字典、列表、字符串、数字等）转换为标准 JSON 格式的字符串。
+# • 参数：接收 Python 可序列化对象（dict/list/str/int/float/bool/None）。
+# • 返回值：str 类型的 JSON 字符串。
+# • 原理：
+# 1. 遍历 Python 对象，将其结构转换为 JSON 语法：dict → {...}，list → [...]，True → true，False → false，None → null。
+# 2. 生成的字符串可用于网络传输、文件存储或跨语言数据交换。
+
+
+json.load() —— 从文件读取JSON → Python对象
+with open("test.json", "r", encoding="utf-8") as f:
+    data = json.load(f)
+# • 用法：直接从文件对象中读取 JSON 数据，并解析为 Python 字典/列表。
+# • 参数：接收一个可读的文件对象（由 open() 函数返回）。
+# • 返回值：Python 字典或列表。
+# • 原理：
+# 1. 内部会先读取文件内容为字符串，再调用 json.loads() 完成解析。
+# 2. 等价于 json.loads(f.read())，但更简洁高效。
+
+
+# 辅助代码片段说明
+# • print(type(data))：打印变量 data 的数据类型，用于验证转换是否成功。
+# • for item in data:：遍历解析后的 Python 字典/列表，逐个取出元素并查看类型。
+# ◦ 如果 data 是字典，item 是字典的键；
+# ◦ 如果 data 是列表，item 是列表的元素。
+
+🔄 完整流程总结
+1. 字符串 → Python 对象：json.loads()
+2. Python 对象 → 字符串：json.dumps()
+3. 文件 → Python 对象：json.load()
+4. Python 对象 → 文件：json.dump()（你代码里没写，补充：json.dump(data, f) 直接将 Python 对象写入文件）
+
+• json.loads() 要求输入必须是严格的 JSON 格式字符串（如键必须用双引号，不能用单引号）。
+• 非可序列化对象（如自定义类实例、函数）无法直接用 json.dumps() 转换，需要额外处理。
+
+• resp.json() ≈ json.loads(resp.text)
+• requests 库在实现 resp.json() 时，底层就是调用了 json.loads()，并额外处理了一些细节
+
+
+json.load(f)与 .read的区别
+json.load(f)直接读取文件对象 f，并自动解析 JSON 字符串为 Python 字典 / 列表             返回值类型dict/list
+ .read(一般为f.erad 其中f为数据类型的别名) 仅读取文件对象 f 里的所有文本内容，不做任何解析   返回值类型str
+简单说：json.load(f) = f.read() + json.loads(读取的字符串)

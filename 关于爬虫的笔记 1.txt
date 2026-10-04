@@ -1,0 +1,195 @@
+# 爬虫分类 通用爬虫(通常指搜索引擎) 和聚焦爬虫(针对特定网站的爬虫)
+# 针对爬虫数据的采集 累积(正常的不停采集)  增量(基于之前的数据再采集)  深层(需要用户做一些操作才能采集 如登录之类的)
+# 步骤 1 定位url
+    # 2 发起请求(需要用到requests  需要添加请求头)
+    # 3 数据提取(整个页面保存)
+    # 4 数据保存with open( ,'',)
+# Http协议(超文本传输协议的缩写)超文本(超越文本) 传输(网络间的传递)  协议(传递的约束)
+#Https协议则是Http+SSL(安全套接字层)组成 SSL(再HTTP协议上再进行一次信息加密)
+# 协议://主机地址[/路径][?查询][#片段]  (片段一般来说可以没有)
+from gettext import install
+
+# 请求方式 - url - 协议版本
+#
+# 请求头: key - val
+#
+# 1. Host: 主机和端口号
+# 2. Connection: 指定连接类型
+# 3. Accept: 传输文件类型
+# 4. Referer: 页面跳转来源，用于防盗链
+# 5. Accept-Encoding: 数据编码格式
+# 6. Cookie: cookie信息，用于保存用户信息
+# 7. User-Agent: 浏览器的用户代理
+
+# 1) 响应属性(定义好一个url对象的时候 可以直接.方法名来调用属性)
+#  response.text 响应体 str 类型
+#  response.content 响应体 bytes 类型(媒体类 也就是说二进制的数据)
+#  response.status_code 响应状态码
+#  response.request.headers 响应对的请求头
+#  response.headers 响应头
+#  response.request.headers.get('cookies') 响应对请求的 cookie
+#  response.cookies 响应的 cookie（经过了 set-cookie 动作）
+#  response.url 请求的 URL
+#  response.json() 用于获取 json 数据
+
+# str通过encode(编码)方式转换为bytes 将人看的懂的变成电脑看不懂的
+str_code = 'abc'
+print(type(str_code))
+byte_code = str_code.encode()
+print(type(byte_code))
+
+#bytes通过decode(解码)转化为str      将电脑看不懂的变成人看得懂的
+byte_code = b'abc'
+print(type(byte_code))
+str_code = byte_code.decode()  #括号里面要写入要解码编码格式 如byte_code.decode("UTF-8")
+print(type(str_code))
+#如果要解码的不是文本而是图片的话 那么怎么转都无法转换为看得懂的文字的
+
+
+# 关于get请求的参数
+# 参数
+# 1) 请求头
+# 在请求某些网址时根据不同的浏览器会返回不同的响应内容，所以此时就需要根据需求来修改或添加请求头信息。
+# 添加请求头方式
+# 1. 定义请求头字
+# 2. 传递请求头参数
+
+headers = {
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+    "Cookie": "buvid3=3DF8DF08-D26C-009D-XXXX-XXXX"
+}
+requests.get(url, headers=headers)
+# User Agent 中文名为用户代理，简称 UA，可以让服务器能够识别前用户浏览器的简易身份信息。
+# 通过检测 UA 可以识别是否是爬虫发送。
+# 如果短时间大量内携带同一个用户代理的请求访问网站服务器，就有可能会引起网站服务器的注意
+#解决方案:自己构建UA池 或者通过 pip install fake_useragent
+# 使用fake_useragent:()也可以实现到一个UA的动态变化
+from fake_useragent import UserAgent
+ua = UserAgent()
+print(ua.random)# ua.random 里的 random 是 UserAgent 类的一个属性
+
+# 2)请求参数-查询字符串
+# 两种方式 1.直接写到url地址中去(？后面  多个参数之间用&连接 如https://www.bilibili.com/video/BV1m6VpzhEdZ?spm_id_from=333.788.player.switch&vd_source=b3b528225d9d18cbf4ea5bfb912f2b18&p=14)
+        # 2.params关键字参数
+            # 1. 设置需要携带的查询字符串参数 (在网络中的负载上可以查看)
+                params = {
+                    'wd': 'helloworld'
+                }
+
+                # 2. 发送请求
+                response = requests.get('https://www.baidu.com/s', params=params)
+# cookie
+# cookie 是一个小型文本，用来传输少量数据（用户信息 - 登录）。
+# 两种传递方式：
+# 请求头：
+headers = {    "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/65.0.3325.181 Safari/537.36",
+    # 定义Cookie信息
+    "Cookie": "BIDUPSID=B713D6D955B1ACCB8470036DAD4FD9F2; ...B64_BOT=1;"
+}
+
+# cookies 关键字参数：
+headers = {
+     "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/65.0.3325.181 Safari/537.36",
+ }
+cookies = { #"BIDUPSID=B713D6D955B1ACCB8470036DAD4FD9F2; ...B64_BOT=1;"像上述一样 想要以关键字参数来传递 要注意到键值对中参数是用=来表示的 而参数之间是用;进行分割的 要将=与;转换成:和，
+     "BIDUPSID": "B713D6D955B1ACCB8470036DAD4FD9F2",
+     "B64_BOT": "1"
+ }
+requests.get(url, headers=headers, cookies=cookies)
+# 注意事项
+# 一套 cookie 往往对应一个用户的信息，请求太频繁有更大可能性被对方识别为爬虫。
+# 如何解决？ 使用多个账号。
+
+
+# 3)ip代理
+# 如果对方封锁我们电脑的公网 这个ip发送的所有请求都不会响应
+# 解决方案:使用代理 饶过他的封锁从而实现继续爬取 使用中间的代理去发送请求 到时候就算被封了 也没关系可以通过其他的ip继续发送请求
+代理方式:proxies = {
+  "http": "http://ip:端口",
+  "https": "http://10.10.1.10:1080",
+}
+
+requests.get("https://example.org", proxies=proxies)
+ip的代理 免费代理(一般用不了) 付费代理(天启代理等)  在get方法中添加一个proxies参数即可
+
+4)其他参数、
+json: json={}
+有时候要向服务器发送的是 json 数据：
+requests.post(url, json={"kw": "python"})
+	演示案例：百度翻译。
+
+取消重定向：allow_redirects=False（默认 True）
+
+SSL 证书错误：verify=False #当网站提示不安全而禁止访问的时候 将True改为False即可
+演示网站：
+https://chinasoftinc.com/owa
+https://12306.cn/mormhweb/
+解决方案:
+import requests
+url = "https://12306.cn/mormhweb/"
+response = requests.get(url, verify=False)
+
+请求超时：timeout=3 单位-秒
+长时间没有响应，效率太低，强制返回，否则报错。
+r =requests.get(url, timeout=3)#当三秒后未响应的话抛出异常退出程序
+
+
+
+方法
+get(前面都是)
+
+post(如果是用post方式传递参数 那么参数一般是用data 至于其他的比如请求头 IP代理等等都可以共用 一般是用在输入数据的时候 如登录)
+使用方式:
+response = requsets.post(url,headers=headers,data=data)
+data参数从负载数据(表单数据的负载)中查看 并且非查询字符串参数的负载
+
+
+重试retrying
+使用超时参数能够加快整体的运行速度 但是在生活中我们使用浏览器访问网页的时候,如果发生速度很慢的情况 一般是选择重新刷新页面 代码实现如下
+retrying
+使用方式:安装 1 pip install retrying
+            2 添加装饰器
+import time
+from retrying import retry
+
+num = 1
+#装饰器 形如一个@后面一个函数的格式
+@retry(stop_max_attempt_number=3)#当出错了三次后就抛出异常 及最大尝试次数
+def test():
+    global num
+    print("num=", num)
+    num += 1
+    time.sleep(1)
+    for i in range(0,100):
+        print("i", i)
+
+if __name__ == '__main__':
+    try:
+        test()
+    except Exception as ret:
+        print("产生异常...")
+        print(ret)
+    else:
+        print("没有异常")
+
+
+session
+# 在爬取某些页面的时候，服务器会需要 cookie，要得到 cookie 就需要先访问某个 URL 进行登录。
+# 服务器接收到请求之后，验证用户名以及密码在登录成功的情况下会返回一个响应，这个响应的 header 中一般会有一个 set-cookie 的信息，它对应的值就是要设置的 cookie 信息。
+#当你带了相关的Cookie信息后 服务器就会认为你是一个已经登陆了的用户 便会提供给你登入用户所能获得到的信息
+# 每次在下一个请求中都要先获取设置的 cookie，这个过程较为麻烦，怎么解决？
+# 解决方案：session（保存 cookie，下一次请求会自动带上前一次的 cookie）。
+# 使用方式：
+# 1. 创建一个session实例对象
+s = requests.Session()
+
+# 2. 使用上一步创建的对象发起请求
+r = s.get(url1, headers)
+r = s.get(url2, headers)
+案例演练:悠久小说 笔趣阁
+
+# # response.request.headers.get('cookies')和response.cookies有什么区别?
+# Request（请求）：是你（客户端）发给服务器的 “消息”，包含你携带的信息（比如 Cookie、User-Agent 等）。
+# Response（响应）：是服务器收到你的请求后，回传给你的 “回复”，包含服务器想让你保存的信息（比如新的 Cookie）。
+response.request.headers.get('cookies')  #数据来源：从你发给服务器的请求头中读取 Cookie 字段（注意是大写 C），本质是 “你请求时带了什么 Cookie 给服务器”。   使用场景：查看你本次请求携带的 Cookie 内容，比如验证请求是否正确带上了登录态。                       返回的是字符串格式（如果请求头里没有 Cookie，返回 None）
+response.cookies                         #数据来源：从服务器返回的响应中解析 Set-Cookie 响应头（服务器要求你保存的 Cookie），本质是 “服务器想让你存什么 Cookie”。   使用场景：获取服务器下发的新 Cookie（比如登录后服务器返回的 sessionid），便于后续请求携带。 返回的是类字典对象 可以像字典一样通过 key 获取 value，还包含 Cookie 的过期时间、域名、路径等元信息。
