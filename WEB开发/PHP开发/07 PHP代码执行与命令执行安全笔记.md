@@ -8,12 +8,12 @@ PHP 提供了大量"代码执行类"函数，本意是方便开发者灵活处�
 
 ### 1. 核心高危函数
 
-| 函数 | 风险点 |
-|---|---|
-| `eval()` | 将字符串作为 PHP 代码执行，最典型的代码执行入口 |
-| `assert()` | 低版本 PHP（<8.0）中传入字符串参数时等效于 `eval()` 执行 |
-| `preg_replace()` | 历史上配合 `/e` 修饰符，会把替换内容当作 PHP 代码执行（PHP 7 已移除 `/e` 修饰符，但遗留系统/老代码中仍常见） |
-| `create_function()` | 本质是对传入字符串调用 `eval()` 动态创建函数，PHP 7.2 起已废弃，PHP 8 移除 |
+| 函数                  | 风险点                                                                |
+| ------------------- | ------------------------------------------------------------------ |
+| `eval()`            | 将字符串作为 PHP 代码执行，最典型的代码执行入口                                         |
+| `assert()`          | 低版本 PHP（<8.0）中传入字符串参数时等效于 `eval()` 执行                              |
+| `preg_replace()`    | 历史上配合 `/e` 修饰符，会把替换内容当作 PHP 代码执行（PHP 7 已移除 `/e` 修饰符，但遗留系统/老代码中仍常见） |
+| `create_function()` | 本质是对传入字符串调用 `eval()` 动态创建函数，PHP 7.2 起已废弃，PHP 8 移除                  |
 
 > 审计提示：以上四个函数是代码执行漏洞审计中**最优先核查**的对象，只要其参数中存在用户可控拼接，基本可以直接判定为高危。
 
@@ -42,11 +42,10 @@ PHP 提供了大量"代码执行类"函数，本意是方便开发者灵活处�
 - **直接代码执行**：`eval`、`assert`、`preg_replace(/e)`、`create_function`
 - **回调函数类**（第二个参数若为用户可控字符串，被当作函数名调用）：`array_map`、`array_filter`、`usort`/`uasort`/`uksort`、`array_walk`/`array_walk_recursive`、`array_udiff` 系列、`array_uintersect` 系列
 - **事件/钩子回调类**：`register_shutdown_function`、`register_tick_function`、`set_error_handler`、`stream_filter_register`、各类 `xml_set_*_handler()`
-- **文件包含类**：`include`/`require` 系列（详见此前的《PHP文件操作安全笔记》）
+- **文件包含类**：`include`/`require` 系列（详见此前的《PHP文件操作安全笔记》）[[06 PHP文件相关操作安全笔记]]
 - **进程/命令执行类**：`exec`、`system`、`shell_exec`、`pcntl_exec`（与下方"命令执行"章节重合，PHP 中代码执行和命令执行的边界并不绝对）
 
 参考资料：
-- https://www.yisu.com/ask/52559195.html
 - https://www.jb51.net/article/264470.htm
 
 ---

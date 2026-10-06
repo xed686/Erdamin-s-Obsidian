@@ -138,3 +138,4 @@ readfile($file);
 
 3. **Xhcms 文件包含**
    参考：https://xz.aliyun.com/t/11310
+[[07 PHP代码执行与命令执行安全笔记]]
