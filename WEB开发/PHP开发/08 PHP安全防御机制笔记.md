@@ -6,16 +6,16 @@
 
 ## 一、通用防御：php.ini 安全设置
 
-| 配置项 | 作用 |
-|---|---|
-| `safe_mode` | 安全模式，开启后命令执行类函数会被禁用（**PHP 5.4 起已移除该配置**，遗留系统/老版本中仍可能见到） |
-| `open_basedir` | 限制 PHP 脚本可访问的文件路径范围，防止目录遍历等文件操作类攻击越界 |
-| `disable_functions` | 禁用函数名单，可视为 `safe_mode` 的"升级版"，可自定义禁用任意危险函数（如 `exec`、`system`、`eval` 等） |
-| `magic_quotes_gpc` | 魔术引号，自动对 GET/POST/COOKIE 数据中的特殊字符转义（作用与 `addslashes()` 相同，**PHP 5.4 起已移除**），本质上是早期版本的 SQL 注入过滤手段 |
-| `max_connections` | 限制数据库连接/访问次数，可用于防止数据库账号被暴力破解 |
-| `allow_url_include` / `allow_url_fopen` | 控制是否允许通过 URL 远程包含/打开文件，是防止**远程文件包含（RFI）**的关键开关，生产环境应关闭 |
-| `session.cookie_httponly` | 禁止 JavaScript 读取 Session Cookie，防止 XSS 窃取会话 |
-| `session.cookie_secure` | 强制 Cookie 仅通过 HTTPS 传输，防止中间人攻击（MITM）截获 |
+| 配置项                                     | 作用                                                                                               |
+| --------------------------------------- | ------------------------------------------------------------------------------------------------ |
+| `safe_mode`                             | 安全模式，开启后命令执行类函数会被禁用（**PHP 5.4 起已移除该配置**，遗留系统/老版本中仍可能见到）                                          |
+| `open_basedir`                          | 限制 PHP 脚本可访问的文件路径范围，防止目录遍历等文件操作类攻击越界                                                             |
+| `disable_functions`                     | 禁用函数名单，可视为 `safe_mode` 的"升级版"，可自定义禁用任意危险函数（如 `exec`、`system`、`eval` 等）                           |
+| `magic_quotes_gpc`                      | 魔术引号，自动对 GET/POST/COOKIE 数据中的特殊字符转义（作用与 `addslashes()` 相同，**PHP 5.4 起已移除**），本质上是早期版本的 SQL 注入过滤手段 |
+| `max_connections`                       | 限制数据库连接/访问次数，可用于防止数据库账号被暴力破解                                                                     |
+| `allow_url_include` / `allow_url_fopen` | 控制是否允许通过 URL 远程包含/打开文件，是防止**远程文件包含（RFI）**的关键开关，生产环境应关闭                                           |
+| `session.cookie_httponly`               | 禁止 JavaScript 读取 Session Cookie，防止 XSS 窃取会话                                                      |
+| `session.cookie_secure`                 | 强制 Cookie 仅通过 HTTPS 传输，防止中间人攻击（MITM）截获                                                           |
 
 > 标 `*` 的几项（`open_basedir`、`disable_functions`、`magic_quotes_gpc`、`session.cookie_httponly`/`session.cookie_secure`）是当前仍然有效、现代 PHP 版本中依然常用的配置；`safe_mode` 与 `magic_quotes_gpc` 已在新版本中被移除，更多作为"历史背景知识"理解其设计思路即可。
 

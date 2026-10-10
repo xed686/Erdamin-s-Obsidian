@@ -21,21 +21,21 @@ PHP 提供了大量"代码执行类"函数，本意是方便开发者灵活处�
 
 > 下表函数的共性是：**它们都会把某个参数当作"可执行的回调/代码"来处理**，一旦该参数（或其内部间接传入的内容）被用户输入污染，就可能被滥用执行任意逻辑。
 
-| 函数 | 函数 | 函数 |
-|---|---|---|
-| `assert()` | `array_map()` | `array_reduce()` |
-| `array_filter()` | `array_diff_uassoc()` | `array_diff_ukey()` |
-| `array_udiff()` | `array_udiff_assoc()` | `array_udiff_uassoc()` |
-| `array_intersect_assoc()` | `array_intersect_uassoc()` | `array_uintersect()` |
-| `array_uintersect_assoc()` | `array_uintersect_uassoc()` | `array_walk()` |
-| `array_walk_recursive()` | `create_function()` | `usort()` |
-| `uasort()` | `uksort()` | `preg_replace()`（配合 `/e`） |
-| `pcntl_exec()` | `register_shutdown_function()` | `register_tick_function()` |
-| `set_error_handler()` | `stream_filter_register()` | `escapeshellcmd()` |
-| `exec()` | `shell_exec()` | `system()` |
-| `include` / `include_once()` | `require()` / `require_once()` | `ob_start()` |
-| `xml_set_character_data_handler()` | `xml_set_default_handler()` | `xml_set_element_handler()` |
-| `xml_set_end_namespace_decl_handler()` | `xml_set_external_entity_ref_handler()` | `xml_set_notation_decl_handler()` |
+| 函数                                         | 函数                                       | 函数                                       |
+| ------------------------------------------ | ---------------------------------------- | ---------------------------------------- |
+| `assert()`                                 | `array_map()`                            | `array_reduce()`                         |
+| `array_filter()`                           | `array_diff_uassoc()`                    | `array_diff_ukey()`                      |
+| `array_udiff()`                            | `array_udiff_assoc()`                    | `array_udiff_uassoc()`                   |
+| `array_intersect_assoc()`                  | `array_intersect_uassoc()`               | `array_uintersect()`                     |
+| `array_uintersect_assoc()`                 | `array_uintersect_uassoc()`              | `array_walk()`                           |
+| `array_walk_recursive()`                   | `create_function()`                      | `usort()`                                |
+| `uasort()`                                 | `uksort()`                               | `preg_replace()`（配合 `/e`）                |
+| `pcntl_exec()`                             | `register_shutdown_function()`           | `register_tick_function()`               |
+| `set_error_handler()`                      | `stream_filter_register()`               | `escapeshellcmd()`                       |
+| `exec()`                                   | `shell_exec()`                           | `system()`                               |
+| `include` / `include_once()`               | `require()` / `require_once()`           | `ob_start()`                             |
+| `xml_set_character_data_handler()`         | `xml_set_default_handler()`              | `xml_set_element_handler()`              |
+| `xml_set_end_namespace_decl_handler()`     | `xml_set_external_entity_ref_handler()`  | `xml_set_notation_decl_handler()`        |
 | `xml_set_processing_instruction_handler()` | `xml_set_start_namespace_decl_handler()` | `xml_set_unparsed_entity_decl_handler()` |
 
 **按风险类型分组理解**：
