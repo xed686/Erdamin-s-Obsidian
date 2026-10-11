@@ -48,11 +48,11 @@
 
 ### 1.3 JS 的三个组成部分（理解 DOM / BOM 的前提）
 
-| 组成 | 全称 | 作用 | 核心对象 |
-|------|------|------|----------|
-| **ECMAScript** | 语言标准 | 语法本身：变量、函数、对象、Promise… | `Object`、`Array`、`Promise`、`JSON`… |
-| **DOM** | Document Object Model | 操作**网页内容**（标签、文字、属性） | `document` |
-| **BOM** | Browser Object Model | 操作**浏览器本身**（地址栏、历史、存储、请求） | `window`、`location`、`navigator`… |
+| 组成             | 全称                    | 作用                        | 核心对象                               |
+| -------------- | --------------------- | ------------------------- | ---------------------------------- |
+| **ECMAScript** | 语言标准                  | 语法本身：变量、函数、对象、Promise…    | `Object`、`Array`、`Promise`、`JSON`… |
+| **DOM**        | Document Object Model | 操作**网页内容**（标签、文字、属性）      | `document`                         |
+| **BOM**        | Browser Object Model  | 操作**浏览器本身**（地址栏、历史、存储、请求） | `window`、`location`、`navigator`…   |
 
 > 一句话记忆：**DOM 管页面里的东西，BOM 管页面外的东西**。`window` 是 BOM 的顶层对象，`document` 是 DOM 的入口，而 `document` 本身又挂在 `window` 下（`window.document`）。
 
