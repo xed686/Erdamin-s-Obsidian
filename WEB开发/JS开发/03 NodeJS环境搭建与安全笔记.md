@@ -51,13 +51,13 @@ Node.js 是整条前端技术演进链路的"地基"之一——有了它，JS �
 
 ### 2. 常用三方库
 
-| 库 | 作用 |
-|---|---|
-| `express` | 简洁而灵活的 Node.js Web 应用框架，是 Node.js 做 Web 开发最常用的基础框架 |
-| `body-parser` | Node.js 中间件，用于解析 JSON、Raw、Text 和 URL 编码的请求数据 |
-| `cookie-parser` | 解析 Cookie 的工具，通过 `req.cookies` 即可取到请求携带的 cookie 并转成对象 |
-| `multer` | Node.js 中间件，用于处理 `enctype="multipart/form-data"` 的表单数据（文件上传场景） |
-| `mysql` | Node.js 连接 MySQL 的专用库，用于对数据库进行操作 |
+| 库               | 作用                                                             |
+| --------------- | -------------------------------------------------------------- |
+| `express`       | 简洁而灵活的 Node.js Web 应用框架，是 Node.js 做 Web 开发最常用的基础框架             |
+| `body-parser`   | Node.js 中间件，用于解析 JSON、Raw、Text 和 URL 编码的请求数据                   |
+| `cookie-parser` | 解析 Cookie 的工具，通过 `req.cookies` 即可取到请求携带的 cookie 并转成对象          |
+| `multer`        | Node.js 中间件，用于处理 `enctype="multipart/form-data"` 的表单数据（文件上传场景） |
+| `mysql`         | Node.js 连接 MySQL 的专用库，用于对数据库进行操作                               |
 
 ### 3. 安装命令
 ```bash
