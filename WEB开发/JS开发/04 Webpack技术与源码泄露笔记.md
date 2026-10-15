@@ -53,6 +53,12 @@ Webpack 的 `mode` 配置项有两个核心取值：
 
 ### 2. `devtool` 配置导致 Source Map 泄露（更常见、更隐蔽）
 
+### Source Map 是什么？
+
+Source Map 可以理解为一个**代码映射表**。因为项目上线前，代码会经过压缩、合并、混淆等处理，最终运行的是人类难以阅读的转译后代码。一旦线上报错，堆栈信息指向的也是乱码代码，开发者很难定位问题。
+
+Source Map 就用来解决这个痛点：它记录了转换后的代码和原始源代码之间的对应关系，让开发者在浏览器里调试时能直接看到原始代码，方便追踪和修复问题
+
 #### 2.1 原理
 
 即便项目是用 `production`（生产）模式打包、代码确实被压缩混淆了，**还有第二个配置项 `devtool` 可能造成源码泄露**——这是实战中更常见、也更容易被开发者忽略的一类问题。
@@ -72,6 +78,22 @@ Webpack 的 `mode` 配置项有两个核心取值：
 - `cheap-module-source-map`
 
 > 这几个取值的区别主要在于映射精度和是否包含源码内容本身，但共性是：**都会在部署目录下生成一个单独的、可能被外部直接访问到的 `.map` 文件**。
+
+### `devtool` 的可选值代表什么？
+
+`devtool` 的取值通常是由多个前缀关键词组成的，这些关键词决定了 Source Map 的生成位置、精度和内容等 。[](https://webpack.js.org/configuration/devtool/)[](https://developer.aliyun.com/article/1510930)[](https://cloud.tencent.cn/developer/article/2127687?policyId=1003#1)
+
+- **`cheap`**：表示精简版。“cheap” 意味着**只精确到行，不精确到列**。生成的 map 文件会小很多，但无法在行内精确定位问题，通常用于提升构建速度 。[](https://developer.aliyun.com/article/1510930)[](https://cloud.tencent.cn/developer/article/2127687?policyId=1003#1)
+    
+- **`module`**：表示会包含 **loader 处理前的原始映射**。默认情况下，cheap 配置可能会忽略 babel 等工具转换前的信息，加上 module 后可以更好地追踪到真正的源码 。[](https://cloud.tencent.cn/developer/article/2127687?policyId=1003#1)
+    
+- **`eval`**：表示使用 eval() 执行代码，并把 Source Map 以内联方式包装进去。优点是构建速度极快，缺点是文件体积偏大 。[](https://webpack.js.org/configuration/devtool/)[](https://developer.aliyun.com/article/1510930)
+    
+- **`inline`**：表示将 Source Map 以 **base64 编码内联**到最终生成的文件末尾，不会生成独立的 `.map` 文件 。[](https://developer.aliyun.com/article/1510930)[](https://github.com/yuanyuanbyte/Blog/issues/38#1)
+    
+- **`hidden`**：表示**生成独立的 `.map` 文件，但在最终文件的末尾不会加注释**。这通常用于内部错误监控，避免普通用户直接找到源文件 。[](https://developer.aliyun.com/article/1510930)[](https://m.yisu.com/zixun/169403.html#1)
+    
+- **`nosources`**：表示生成的 Source Map **只包含位置映射信息，不包含源代码内容本身**，常用于生产环境兼顾报错定位和源码保护 。
 
 参考：<https://mp.weixin.qq.com/s/tLjSb5cinXawMEC7RfJEJQ>
 
