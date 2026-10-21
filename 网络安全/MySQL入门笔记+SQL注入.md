@@ -43,14 +43,13 @@
 | 外键（Foreign Key）        | 指向另一张表主键的列，用于关联表，对应到另一张表格的 Primary Key，也可以对应到自己的表格                                                       |
 | NULL                   | 空值，表示"没有值"，不等于 `0` 或空字符串                                                                                 |
 
-\![[Pasted image 20261020102043.png]]
 
 **一张示例表 `` `users` ``**，后续所有例子都基于它：
 
-| id | username | password  | email         | role  | created_at |
-| -- | -------- | --------- | ------------- | ----- | ---------- |
-| 1  | alice    | e10adc... | <alice@a.com> | user  | 2026-01-01 |
-| 2  | bob      | 5f4dcc... | <bob@a.com>   | admin | 2026-01-02 |
+| id  | username | password  | email         | role  | created_at |
+| --- | -------- | --------- | ------------- | ----- | ---------- |
+| 1   | alice    | e10adc... | <alice@a.com> | user  | 2026-01-01 |
+| 2   | bob      | 5f4dcc... | <bob@a.com>   | admin | 2026-01-02 |
 
 ```sql
 CREATE TABLE `users` (
@@ -65,16 +64,12 @@ CREATE TABLE `users` (
 
 > 注意对比：`` `users` ``、`` `id` ``、`` `username` `` 这些是反引号包住的**标识符**（表名/列名，自己取的名字）；而 `'user'` 这种单引号包住的是**字符串数据**（这里是 `` `role` `` 列的默认值）。两者含义完全不同，不要混淆。
 
-\![[Pasted image 20261020103427.png]]
-
-\![[Pasted image 20261020103455.png]]
 
 - `VARCHAR(50)`：最长 50 字符的可变长字符串。
 - `INT`：整数。`DATETIME`：日期时间。
 - `AUTO_INCREMENT`：自增，不用手动赋值。
 - `NOT NULL`：不允许为空。`DEFAULT`：默认值。
 
-\![[Pasted image 20261020103104.png]]
 
 > SQL 语句**不区分大小写**（`SELECT` 和 `select` 一样），但习惯上关键字大写、表名字段名小写，便于阅读。语句以 `;` 结尾。
 
