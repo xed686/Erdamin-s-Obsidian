@@ -3,7 +3,10 @@
 ![笔记数](https://img.shields.io/badge/notes-57-blue?style=flat-square)
 ![分类](https://img.shields.io/badge/categories-15-orange?style=flat-square)
 ![体积](https://img.shields.io/badge/size-667%20KB-brightgreen?style=flat-square)
-![更新](https://img.shields.io/badge/status-持续更新-success?style=flat-square)
+![状态](https://img.shields.io/badge/持续学习更新中-success?style=flat-square&logo=github&logoColor=white)
+
+> 🔄 **持续学习更新中** —— 这个笔记库会随学习进度不断补新文件，分类也会跟着长。
+> 建议 Watch 一下仓库，有新笔记第一时间知道；发现错误也欢迎提 Issue。
 
 一份从零开始、以**渗透测试与漏洞挖掘**为目标的自学笔记库。57 篇 Markdown，666 KB，
 按「Linux 基础 → 前后端开发 → Web 攻防 → 代码审计 → 信息收集」的顺序串成一条完整学习路线。
