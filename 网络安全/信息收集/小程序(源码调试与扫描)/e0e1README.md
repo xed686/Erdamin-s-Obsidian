@@ -1,4 +1,13 @@
+---
+tags: [网络安全, 信息收集, 小程序(源码调试与扫描)]
+---
+
 # e0e1-wx-gui
+
+> [!info] 🧭 知识导航
+> 所属：[[MOC - 小程序安全]] ｜ 上级：[[MOC - 信息收集]] ｜ 首页：[[🏠 知识库首页]]
+> 上一篇：[[e0e1-wx-gui-使用教程工作流]] ｜ 下一篇：[[小程序安全测试笔记]]
+> 🔗 相关：[[详细介绍e0e1tools]] · [[e0e1-wx-gui-使用教程工作流]]
 
 ![Platform](https://img.shields.io/badge/Platform-Windows_10%2F11-0078D4)
 ![Python](https://img.shields.io/badge/Python-3.10%2B-3776AB)

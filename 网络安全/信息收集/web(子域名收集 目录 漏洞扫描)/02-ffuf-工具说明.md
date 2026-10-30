@@ -1,4 +1,13 @@
+---
+tags: [网络安全, 信息收集, web(子域名收集 目录 漏洞扫描)]
+---
+
 # ffuf 工具说明
+
+> [!info] 🧭 知识导航
+> 所属：[[MOC - Web资产收集]] ｜ 上级：[[MOC - 信息收集]] ｜ 首页：[[🏠 知识库首页]]
+> 上一篇：[[01-nuclei-工具说明]] ｜ 下一篇：[[03-subfinder-工具说明]]
+> 🔗 相关：[[03-subfinder-工具说明]] · [[01-nuclei-工具说明]]
 
 GitHub 仓库：https://github.com/ffuf/ffuf
 

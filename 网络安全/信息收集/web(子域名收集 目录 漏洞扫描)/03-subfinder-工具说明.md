@@ -1,4 +1,14 @@
+---
+tags: [网络安全, 信息收集, web(子域名收集 目录 漏洞扫描)]
+---
+
 # Subfinder 工具说明
+
+> [!info] 🧭 知识导航
+> 所属：[[MOC - Web资产收集]] ｜ 上级：[[MOC - 信息收集]] ｜ 首页：[[🏠 知识库首页]]
+> 上一篇：[[02-ffuf-工具说明]] ｜ 下一篇：[[04-httpx-usage-guide]]
+> 🔗 相关：[[04-httpx-usage-guide]] · [[02-ffuf-工具说明]]
+
 **subfinder/amass之类**：针对拿到的域名再做子域名扩展（进一步拉宽资产面)
 GitHub 仓库：https://github.com/projectdiscovery/subfinder
 

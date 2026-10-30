@@ -1,4 +1,13 @@
+---
+tags: [网络安全, 信息收集, APP(资产收集 动静态编译)]
+---
+
 # MobSF (Mobile Security Framework) 工具介绍与使用方法
+
+> [!info] 🧭 知识导航
+> 所属：[[MOC - APP资产收集]] ｜ 上级：[[MOC - 信息收集]] ｜ 首页：[[🏠 知识库首页]]
+> 上一篇：[[01-AppInfoScanner工具介绍与使用方法]] ｜ 下一篇：[[APP渗透测试学习笔记01]]
+> 🔗 相关：[[工作流-APP渗透测试工具联动工作流]] · [[01-AppInfoScanner工具介绍与使用方法]]
 
 GitHub: https://github.com/MobSF/Mobile-Security-Framework-MobSF
 

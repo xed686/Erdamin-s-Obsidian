@@ -1,4 +1,13 @@
+---
+tags: [网络安全, 信息收集, APP(资产收集 动静态编译)]
+---
+
 # APP渗透测试 - 工具联动工作流
+
+> [!info] 🧭 知识导航
+> 所属：[[MOC - APP资产收集]] ｜ 上级：[[MOC - 信息收集]] ｜ 首页：[[🏠 知识库首页]]
+> 上一篇：[[APP渗透测试学习笔记01]]
+> 🔗 相关：[[工作流-web资产收集到漏洞验证]] · [[02-MobSF工具介绍与使用方法]]
 
 > 面向Android APP渗透测试的信息收集→深度分析→漏洞验证完整链路
 > 基于 AppInfoScanner / MobSF / APKDeepLens / APKLeaks / Frida / Burp Suite 的组合使用

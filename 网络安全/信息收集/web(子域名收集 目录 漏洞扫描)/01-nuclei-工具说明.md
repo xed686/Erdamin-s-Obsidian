@@ -1,4 +1,13 @@
+---
+tags: [网络安全, 信息收集, web(子域名收集 目录 漏洞扫描)]
+---
+
 # Nuclei 工具说明
+
+> [!info] 🧭 知识导航
+> 所属：[[MOC - Web资产收集]] ｜ 上级：[[MOC - 信息收集]] ｜ 首页：[[🏠 知识库首页]]
+> 下一篇：[[02-ffuf-工具说明]]
+> 🔗 相关：[[工作流-web资产收集到漏洞验证]] · [[02-ffuf-工具说明]]
 
 GitHub 仓库：https://github.com/projectdiscovery/nuclei
 

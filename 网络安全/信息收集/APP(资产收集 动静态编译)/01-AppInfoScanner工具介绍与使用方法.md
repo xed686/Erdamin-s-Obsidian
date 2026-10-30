@@ -1,4 +1,13 @@
+---
+tags: [网络安全, 信息收集, APP(资产收集 动静态编译)]
+---
+
 # AppInfoScanner 工具介绍与使用方法
+
+> [!info] 🧭 知识导航
+> 所属：[[MOC - APP资产收集]] ｜ 上级：[[MOC - 信息收集]] ｜ 首页：[[🏠 知识库首页]]
+> 下一篇：[[02-MobSF工具介绍与使用方法]]
+> 🔗 相关：[[02-MobSF工具介绍与使用方法]] · [[APP渗透测试学习笔记01]]
 
 GitHub: https://github.com/kelvinBen/AppInfoScanner
 国内加速通道: https://gitee.com/kelvin_ben/AppInfoScanner
