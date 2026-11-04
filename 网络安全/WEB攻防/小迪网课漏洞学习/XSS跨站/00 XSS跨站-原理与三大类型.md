@@ -7,7 +7,7 @@ tags: [网络安全, WEB攻防, XSS, 前端安全]
 > [!info] 🧭 知识导航
 > 所属：[[MOC - XSS跨站]] ｜ 上级：[[MOC - 小迪网课漏洞学习]] ｜ 首页：[[🏠 知识库首页]]
 > 下一篇：[[01 XSS跨站-文件类型与功能逻辑触发]]
-> 🔗 相关：[[01 XSS跨站-文件类型与功能逻辑触发]] · [[01 DOM与BOM及基于DOM的漏洞笔记]] · [[00 JavaScript安全分析与Ajax技术笔记]] · [[02 前端加密与代码混淆笔记]] · [[02 身份验证机制笔记-Cookie_Session_Token]] · [[05 Vue开发环境搭建与安全笔记]] · [[SQL注入点工具化利用全面工作流]]
+> 🔗 相关：[[01 XSS跨站-文件类型与功能逻辑触发]] · [[02 XSS跨站-框架与浏览器层变体]] · [[01 DOM与BOM及基于DOM的漏洞笔记]] · [[00 JavaScript安全分析与Ajax技术笔记]] · [[02 前端加密与代码混淆笔记]] · [[02 身份验证机制笔记-Cookie_Session_Token]] · [[05 Vue开发环境搭建与安全笔记]] · [[SQL注入点工具化利用全面工作流]]
 
 > 一句话总结:XSS 的本质是"网站把用户输入的内容,当成网页代码(HTML/JS)返回给浏览器执行了",三种类型的区别只在于"恶意代码经过了哪条路径、在谁的浏览器里执行"。
 > 来源:小迪安全课程(XSS 原理与分类部分)。本篇由 Claude 按"是什么→为什么存在→怎么做→业务案例→实战怎么用→防御→易错点"结构整理,补充部分用"🔎 补充"标注。
@@ -139,7 +139,7 @@ Root cause 一句话:**网站对"用户输入的数据"和"网页本身的代码
 
 ### 2.2 为什么会存在(原理)
 
-对应你上传的"反射型 XSS 攻击流程"图,拆解这条链:
+拆解这条链:
 
 ```
 ① 攻击者构造一个带恶意脚本参数的链接,如 http://正常网站/search?kw=<script>...</script>
@@ -247,13 +247,13 @@ Root cause 和 1.2 节一致——服务器把 URL 参数未经编码就输出�
 
 ### 4.1 它是什么
 
-DOM 型 XSS,是指**整个攻击过程完全发生在浏览器前端**——恶意代码是被页面里的 JavaScript 读取、处理后,直接写入了当前页面的 DOM 结构里触发的,**服务器返回的页面内容本身可能根本没有变化,服务器甚至完全不知道发生了攻击**。
+DOM 型 XSS,是指**整个攻击过程完全发生在浏览器前端**(三种XSS的执行也都发生在前端 真正的区别在于**恶意代码有没有经过服务器这一趟"**)——恶意代码是被页面里的 JavaScript 读取、处理后,直接写入了当前页面的 DOM 结构里触发的,**服务器返回的页面内容本身可能根本没有变化,服务器甚至完全不知道发生了攻击**。这个漏洞从"数据被注入"到"代码被执行"的整个过程,全程没有服务器的参与;服务器返回的页面是干净的,是前端 JS 自己把 payload 捡起来并引爆的。
 
 > 类比:前面反射型和存储型,都是"服务器这个厨师把带毒的菜端给了你";而 DOM 型更像是"服务器端给你的是一份正常的食材和菜谱,但菜谱里有一步写着'把顾客自己带来的调料直接加进去',而顾客带来的'调料'(URL 里的参数)被下了毒"——出问题的是前端 JS 这份"菜谱"处理数据的方式,而不是服务器端。
 
 ### 4.2 为什么会存在(原理)
 
-对应你上传的第二张图(坏人 C 给好人 A 发微博链接的那张),拆解这条链:
+拆解这条链:
 
 ```
 ① 攻击者发给受害者一个链接,链接的参数里携带了恶意 JS 代码
@@ -266,11 +266,62 @@ DOM 型 XSS,是指**整个攻击过程完全发生在浏览器前端**——恶�
 Root cause:**漏洞不在服务器的输出环节,而在前端 JavaScript 处理数据的环节**。前端 JS 从一个 Source(如 `location.hash`、`location.search` 这类 URL 里用户可控的部分)取了数据,未经处理就交给了一个 Sink(如 `innerHTML`、`document.write` 这类会把字符串当 HTML 解析的属性/函数)——这正是《DOM与BOM及基于DOM的漏洞笔记》里讲过的 Source→Sink 模型在 XSS 上的体现。
 
 ### 4.3 怎么做(过程)
+### 常见的 Source(攻击者可控的输入来源)
 
+这几个是读 JS 时要盯着的——看到 JS 在读这些东西,就说明"用户输入从这里进来了"：
+
+|Source(JS 写法)|它读的是什么|为什么攻击者可控|
+|---|---|---|
+|`location.hash`|URL 里 `#` 后面的部分|你能随便改 URL|
+|`location.search`|URL 里 `?` 后面的参数部分|同上|
+|`location.href`|整个完整 URL|同上|
+|`document.referrer`|用户从哪个页面跳过来的|攻击者能伪造来源页面|
+|`window.name`|跨页面传递的一个值|可被攻击者设置|
+### 常见的 Sink(会把字符串当代码执行的危险点)
+
+看到 JS 把数据交给下面这些东西,就要高度警觉——数据到这里会被"解析执行"：
+
+|Sink(JS 写法)|它干了什么危险的事|
+|---|---|
+|`innerHTML = xxx`|把字符串当 **HTML** 塞进页面并解析(标签会生效)|
+|`document.write(xxx)`|直接把字符串当 HTML 写进页面|
+|`eval(xxx)`|把字符串当 **JS 代码**直接执行|
+|`location = xxx` / `location.href = xxx`|把字符串当跳转地址(可被 `javascript:` 伪协议利用)|
+|`$(xxx).html(xxx)`|jQuery 的写法,等同于 innerHTML|
 **步骤 1:判断页面是否存在"前端 JS 处理用户输入"的逻辑**
 - 做什么:查看页面的 JS 代码(F12 → Sources),搜索危险的 Sink 关键词:`innerHTML`、`document.write`、`eval`、`location`、`$(...).html()` 等,再反向追踪它们处理的数据是不是来自 URL(`location.hash`/`location.search`/`document.referrer` 等 Source)。
 - 为什么这么做:DOM 型的根源在前端代码,所以必须读前端 JS 才能定位,这和反射/存储型"主要看服务器输出"的排查方式不同。
 - 做完得到什么:找到一条"Source → Sink 中间没有过滤"的数据流。
+- 假设你 F12 → Sources 面板,在页面的 JS 里看到这么一段代码：
+
+javascript
+
+```javascript
+function showWelcome() {
+    var name = location.hash.substring(1);      // ← 第 1 行
+    var box = document.getElementById("welcome");
+    box.innerHTML = "欢迎你," + name;            // ← 第 3 行
+}
+showWelcome();
+```
+
+**你的大脑应该这样逐步分析:**
+
+**① 先搜 Sink 关键词**:你在代码里搜 `innerHTML`,定位到第 3 行 `box.innerHTML = "欢迎你," + name;` —— 找到一个 Sink 了(innerHTML 会解析 HTML)。
+
+**② 反向追踪:喂给这个 Sink 的数据是哪来的?** 第 3 行用到了变量 `name`,那 `name` 是从哪来的?往上看第 1 行:`var name = location.hash.substring(1);` —— **`name` 来自 `location.hash`,这是一个 Source!**(`substring(1)` 只是把开头的 `#` 去掉,不影响它是用户可控数据)
+
+**③ 检查中间有没有过滤**:从第 1 行(Source)到第 3 行(Sink),中间有没有对 `name` 做任何编码/过滤/校验?——**没有**,它被原样拼进了 `innerHTML`。
+
+**④ 结论:找到一条完整的漏洞数据流!**
+
+```
+location.hash (Source,你可控)
+      ↓  中间没有任何过滤
+box.innerHTML (Sink,会解析 HTML)
+```
+
+**⑤ 这条数据流怎么引爆**(就是讲的步骤 2):既然 `location.hash` 的内容会被原样塞进 `innerHTML`,那你访问 `http://目标/page#<img src=x onerror=alert(1)>`,这个 `<img>` 就会被写进页面解析、触发 `onerror` 弹窗。
 
 **步骤 2:构造 payload 验证**
 - 做什么:根据这条数据流,构造能触发的 URL,常用 `#` 后面的 hash 部分(因为 hash 不会发给服务器,更能体现"纯前端触发"的特点),如 `http://目标/page#<img src=x onerror=alert(1)>`。
