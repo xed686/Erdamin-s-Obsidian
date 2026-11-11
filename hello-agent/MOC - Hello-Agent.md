@@ -20,7 +20,7 @@ tags: [hello-agent, MOC]
 
 **🤖 智能体构建主线**：[[00 hello-agents-ch1-notes]] → [[01 工具的定义与实现]] → [[02 ReAct智能体的实现与调试]] → [[03 Plan-and-Solve规划器与执行器]]
 
-**📚 速查与工程化**：[[Agent常用英文术语与Python基础速查]] → [[industrial-grade-skill-guide]]
+**📚 速查与工程化**：[[Agent常用英文术语与Python基础速查]] → [[industrial-grade-skill-guide]] → [[AI视频全流程-Eian笔记]]
 
 ---
 上级 [[🏠 知识库首页]]
