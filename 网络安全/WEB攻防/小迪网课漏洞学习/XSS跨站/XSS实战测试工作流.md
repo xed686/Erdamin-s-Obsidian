@@ -139,7 +139,7 @@ XSS 的土壤是"用户可控内容进入了浏览器解析的页面"。所以�
 | 关键字只删一次(没递归)               | **双写绕过**:`<scrscriptipt>` 删中间后拼回                                    |
 | 内容会被解码                     | **编码绕过**:Unicode/HTML 实体编码 `javascript:`                            |
 
-**第 3 步:如果手工太慢,上工具辅助**:XSStrike 自动 fuzz 绕过 payload;payload 速查用 xss.xiejiahe.com。但复杂定制过滤还得靠手工。
+**第 3 步:如果手工太慢,上工具辅助**:XSStrike 自动 fuzz 绕过 payload;payload 速查用 https://github.com/wxwhhh/Chypass_pro。但复杂定制过滤还得靠手工。
 
 **第 4 步:如果过滤实在绕不过去**:
 
