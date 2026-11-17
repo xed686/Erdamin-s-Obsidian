@@ -10,8 +10,8 @@ tags: [网络安全, WEB开发, JAVAEE开发, MOC]
 
 ## 📄 笔记清单
 
-- [[00 JavaEE_Servlet_Filter_Listener安全笔记]]
-- [[01 Java数据库框架与SQL注入审计笔记]]
+- [[00_JavaEE_Servlet_Filter_Listener安全笔记]]
+- [[01_Java数据库框架与SQL注入审计笔记]]
 - [[Java_JavaEE全景速成笔记]]
 - [[Java看懂代码入门笔记]]
 
