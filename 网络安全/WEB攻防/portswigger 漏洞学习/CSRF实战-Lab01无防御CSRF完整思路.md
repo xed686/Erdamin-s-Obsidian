@@ -5,9 +5,9 @@ tags: [网络安全, WEB攻防, CSRF, portswigger, 实战]
 # CSRF 实战 · Lab01:无防御的 CSRF —— 完整思路(含现实渗透视角)
 
 > [!info] 🧭 知识导航
-> 所属:[[portswigger 漏洞学习目录]] ｜ 上级:[[MOC - WEB攻防]]
-> 🔗 相关:[[SSRF实战-过滤绕过与BlindSSRF-PortSwigger靶场笔记]](同系列靶场打法)
-> 🔗 概念前置:CSRF 原理(三个必要条件、浏览器自动带 cookie)——见 CSRF 基础笔记
+> 所属：[[portswigger 漏洞学习目录]] ｜ 上级：[[MOC - WEB攻防]] ｜ 首页：[[🏠 知识库首页]]
+> 上一篇：[[05_OS命令注入漏洞笔记V2]] ｜ 下一篇：[[SSRF实战-过滤绕过与BlindSSRF-PortSwigger靶场笔记]]
+> 🔗 相关：[[CSRF跨站请求伪造-原理与绕过]] · [[SSRF实战-过滤绕过与BlindSSRF-PortSwigger靶场笔记]] · [[02_身份验证机制笔记-Cookie_Session_Token]]
 
 > 一句话总结:**这一关是最纯粹的 CSRF——目标站改邮箱功能没有任何防御(没 token、没 SameSite),你做一个"自动提交改邮箱表单"的页面,让登录着的受害者访问,他的浏览器就自动带着他的身份替你把邮箱改了。**
 > 来源:PortSwigger Web Security Academy — Lab: CSRF vulnerability with no defenses(APPRENTICE)。

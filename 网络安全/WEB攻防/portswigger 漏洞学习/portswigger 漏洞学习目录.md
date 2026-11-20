@@ -16,6 +16,7 @@ tags: [网络安全, WEB攻防, portswigger 漏洞学习, MOC]
 - [[03_SSRF服务端请求伪造完整笔记]]
 - [[04_文件上传漏洞笔记]]
 - [[05_OS命令注入漏洞笔记V2]]
+- [[CSRF实战-Lab01无防御CSRF完整思路]]
 - [[SSRF实战-过滤绕过与BlindSSRF-PortSwigger靶场笔记]]
 - [[渗透测试中状态码的速查表]]
 

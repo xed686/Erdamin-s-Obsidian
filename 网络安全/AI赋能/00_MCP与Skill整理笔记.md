@@ -6,7 +6,8 @@ tags: [网络安全, AI安全, Agent, AI赋能安全]
 
 > [!info] 🧭 知识导航
 > 上级：[[MOC - 网络安全]] ｜ 首页：[[🏠 知识库首页]]
-> 🔗 相关：[[SRC漏洞挖掘经验-老手如何一眼看出重点]] · [[XSS-labs实战复盘-绕过技巧与原理全解]] · [[claude-code-beginner-guide]] · [[industrial-grade-skill-guide]] · [[MOC - Hello-Agent]]
+> 下一篇：[[01_AI赋能网络安全-Agent工具横评]]
+> 🔗 相关：[[SRC漏洞挖掘经验-老手如何一眼看出重点]] · [[XSS-labs实战复盘-绕过技巧与原理全解]] · [[claude-code-beginner-guide]] · [[industrial-grade-skill-guide]] · [[MOC - Hello-Agent]] · [[01_AI赋能网络安全-Agent工具横评]]
 
 > 一句话总结:上一篇讲了 Agent 的"骨架"(MCP=连接层、Skill=流程层),这一篇讲 **Agent 本体是什么(大模型当大脑的自主执行闭环)**,以及它在网络安全里的两个方向——**① 把 Agent 当武器(自主渗透/代码审计 Agent)② 把 Agent 当靶子(这套架构本身的新攻击面)**。后者是你"网安+Agent"交叉方向最该盯的蓝海。
 > 来源:小迪安全课程(AI 赋能安全部分)+ 联网核实的 2025-2026 行业现状。按 skill 整理,未能用非大陆源核实的国内平台/项目据实标注。
