@@ -20,6 +20,7 @@ tags: [网络安全, MOC]
 
 - [[00_MCP与Skill整理笔记]]　`📁AI赋能`
 - [[01_AI赋能网络安全-Agent工具横评]]　`📁AI赋能`
+- [[02_AI赋能网络安全-WorkflowAgent与模型选型]]　`📁AI赋能`
 - [[AI时代的漏洞趋势-衰退兴起与押注方向]]　`📁AI赋能`
 - [[渗透测试英语词汇速记表]]
 
@@ -45,7 +46,7 @@ tags: [网络安全, MOC]
 
 **🕷️ XSS 跨站专题**：[[00_XSS跨站-原理与三大类型]] → [[01_XSS跨站-文件类型与功能逻辑触发]] → [[02_XSS跨站-框架与浏览器层变体]] → [[03_XSS跨站-攻击利用手法]] → [[04_XSS跨站-防护机制与绕过]] → [[XSS实战测试工作流]] → [[localStorage-XSS答疑-受害范围与黑白盒区分_1]] → [[05_Vue开发环境搭建与安全笔记]] → [[01_DOM与BOM及基于DOM的漏洞笔记]] → [[00_JavaScript安全分析与Ajax技术笔记]]
 
-**🤖 AI 赋能安全**：[[00_MCP与Skill整理笔记]] → [[01_AI赋能网络安全-Agent工具横评]] → [[AI时代的漏洞趋势-衰退兴起与押注方向]] → [[claude-code-beginner-guide]] → [[MOC - Hello-Agent]]
+**🤖 AI 赋能安全**：[[00_MCP与Skill整理笔记]] → [[01_AI赋能网络安全-Agent工具横评]] → [[02_AI赋能网络安全-WorkflowAgent与模型选型]] → [[AI时代的漏洞趋势-衰退兴起与押注方向]] → [[claude-code-beginner-guide]] → [[MOC - Hello-Agent]]
 
 ---
 上级 [[🏠 知识库首页]]
