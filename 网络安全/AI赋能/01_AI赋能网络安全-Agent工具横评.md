@@ -6,8 +6,8 @@ tags: [网络安全, AI安全, Agent, AI赋能安全, 工具]
 
 > [!info] 🧭 知识导航
 > 上级：[[MOC - 网络安全]] ｜ 首页：[[🏠 知识库首页]]
-> 上一篇：[[00_MCP与Skill整理笔记]] ｜ 下一篇：[[AI时代的漏洞趋势-衰退兴起与押注方向]]
-> 🔗 相关：[[00_MCP与Skill整理笔记]] · [[02_AI赋能网络安全-WorkflowAgent与模型选型]] · [[AI时代的漏洞趋势-衰退兴起与押注方向]] · [[claude-code-beginner-guide]] · [[industrial-grade-skill-guide]]
+> 上一篇：[[00_MCP与Skill整理笔记]] ｜ 下一篇：[[02_AI赋能网络安全-WorkflowAgent与模型选型]]
+> 🔗 相关：[[00_MCP与Skill整理笔记]] · [[AI时代的漏洞趋势-衰退兴起与押注方向]] · [[claude-code-beginner-guide]] · [[industrial-grade-skill-guide]] · [[02_AI赋能网络安全-WorkflowAgent与模型选型]]
 
 > 一句话总结:前两篇讲了 Agent 的架构(MCP/Skill)和本体(大脑闭环),这一篇是**落地工具层**——市面上真正能用来做"代码审计 / 渗透 / 开发"的 Agent 工具长什么样、怎么分工。核心认知:这些工具分"**编排层(指挥官,如 Pi)**"和"**执行层(干活的,如 Claude Code)**",编排层可以把任务委派给执行层。
 > 来源:小迪安全课程(AI 赋能安全部分)+ 联网核实(Pi 等工具真实性经非大陆来源确认)。按 skill 整理。
