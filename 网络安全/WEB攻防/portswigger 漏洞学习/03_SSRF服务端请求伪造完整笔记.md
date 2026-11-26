@@ -7,7 +7,7 @@ tags: [网络安全, WEB攻防, portswigger 漏洞学习]
 > [!info] 🧭 知识导航
 > 所属：[[portswigger 漏洞学习目录]] ｜ 上级：[[MOC - WEB攻防]] ｜ 首页：[[🏠 知识库首页]]
 > 上一篇：[[02_认证漏洞笔记]] ｜ 下一篇：[[04_文件上传漏洞笔记]]
-> 🔗 相关：[[05-naabu-usage-guide]] · [[04-httpx-usage-guide]] · [[05_OS命令注入漏洞笔记V2]] · [[SSRF实战-过滤绕过与BlindSSRF-PortSwigger靶场笔记]]
+> 🔗 相关：[[00_XXE外部实体注入-原理与利用全集]] · [[05-naabu-usage-guide]] · [[04-httpx-usage-guide]] · [[05_OS命令注入漏洞笔记V2]] · [[SSRF实战-过滤绕过与BlindSSRF-PortSwigger靶场笔记]]
 
 ## 一、什么是 SSRF
 
