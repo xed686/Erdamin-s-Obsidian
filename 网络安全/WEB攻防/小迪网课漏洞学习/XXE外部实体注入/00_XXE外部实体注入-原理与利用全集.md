@@ -9,7 +9,7 @@ tags: [网络安全, WEB攻防, XXE, XML外部实体, 文件读取, SSRF]
 > 🔗 相关：[[02_任意文件下载漏洞-原理与利用全集]] · [[03_SSRF服务端请求伪造完整笔记]] · [[00_文件上传漏洞-原理与绕过全集]] · [[00_路径穿越漏洞详解]] · [[06_PHP文件相关操作安全笔记]] · [[SRC漏洞挖掘经验-老手如何一眼看出重点]]
 
 > 一句话总结：XML 允许用 **DTD 定义一个"实体"**，实体的值可以是**外部 URI**；解析器遇到 `&xxe;` 就会去把那个 URI 的内容**取回来填进去**——于是你让它取 `file:///etc/passwd` 就是**任意文件读取**，让它取 `http://内网IP/` 就是 **SSRF**，取不回来（无回显）时就用**带外通道（DNS/HTTP）**把数据偷出来。
-> 来源：小迪安全课程（XXE 部分）+ 本机 PHP 7.3.4 实测（§1.4）+ 联网核实（MITRE/NVD、Rapid7 Metasploit 模块，非大陆来源）。
+> 来源：小迪安全课程（XXE 部分）+ 本机 PHP 7.3.4 实测（§1.5）+ 联网核实（MITRE/NVD、Rapid7 Metasploit 模块，非大陆来源）。
 > 适用前提：仅限授权环境、靶场、CTF、书面授权范围。带外请求会打到你自己控制的域名，别用真实第三方域名做测试。
 >
 > 📊 **本篇整体定级：🟡 重要**。XXE 不算"天天遇到"，但**一旦遇到基本就是高危**（读配置/凭据、打内网、打云元数据），而且在 Java/.NET 老系统、SOAP 接口、文档解析功能里命中率不低。分级重点：**DTD 机制**和**无回显外带**是 🔴（不懂这两块，payload 只能照抄）；具体 payload 变体和载体清单 🟡/🟢，用到再查。
@@ -18,6 +18,8 @@ tags: [网络安全, WEB攻防, XXE, XML外部实体, 文件读取, SSRF]
 ---
 
 ## 0. 先看这张地图
+
+这一篇讲的是 Web 里一类"**服务端被诱导去读文件、发请求**"的漏洞。它在渗透流程里落在"发现输入点 → 验证漏洞 → 升级利用"这一段；学完你应当能做到：拿到一个接收 XML 的接口，先判断有没有 XXE，没回显时怎么确认，确认后怎么把影响做上去，以及怎么写进报告。
 
 | 知识点 | 分级 | 在渗透流程中的位置 | 一句话作用 |
 |---|---|---|---|
@@ -37,24 +39,85 @@ tags: [网络安全, WEB攻防, XXE, XML外部实体, 文件读取, SSRF]
 **前置知识**：
 - **"数据越界成指令"这个共同根因**——详见 [[01_文件包含漏洞-原理与利用全集]] §1.2（XXE 是同一个根，只是载体换成了 XML）。
 - **SSRF 的探测与利用**——详见 [[03_SSRF服务端请求伪造完整笔记]]，XXE→SSRF 是它的一个触发器。
-- **文件上传后服务端会解析文件**——详见 [[00_文件上传漏洞-原理与绕过全集]] §0.1。
+- **文件上传后服务端会解析文件**——详见 [[00_文件上传漏洞-原理与绕过全集]] §0.2。
 
 ---
 
-## 1. 先搞懂 XML / DTD / 实体 🔴 核心 —— 这是所有 payload 的地基
+## 1. XXE 是什么，为什么会存在 🔴 核心 —— 先看懂它，再学它的语法
 
-### 1.1 XML 与 HTML 的分工差异 🟢 了解
+### 1.1 它是什么
+
+**XXE（XML External Entity Injection，XML 外部实体注入）**：应用在解析用户提交的 XML 时**没有禁用"外部实体"的加载**，于是攻击者可以在 XML 里自己声明一个指向任意地址的外部实体，让解析器**替他去"取"**——取本地文件就是任意文件读取，取内网地址就是 SSRF，取云元数据就是临时凭据。
+
+一句话：**你让服务器解析一段 XML，它会顺手把这段 XML 里"指向的地址"也取一遍——而这段 XML 是你写的。**
+
+> 类比：XML 里的**实体**像 Word 的"自动替换"——你定义一个缩写，Word 看到就展开成完整内容。正常情况这个"完整内容"是写死在文档里的一段文字；但 XML 允许把它写成 **"内容去这个地址取"**（`SYSTEM "file:///..."`）。攻击者只要把那个地址换成自己关心的文件，解析器就老老实实取回来，还常常按业务逻辑回显给你。
+> 类比和真实情况的差别：Word 不会去碰文件系统和网络，而 XML 解析器**真的会发起一次读取或请求**——这份"权限"就是漏洞的全部要害。
+
+**会造成什么**（细表见 §2）：任意文件读取、SSRF（打内网 / 打云元数据）、内网探测；**RCE 不是 XXE 的直接能力**，需要 `expect://` 扩展或与其他漏洞组合。
+
+### 1.2 一个最小例子：先看看洞长什么样
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE test [ <!ENTITY xxe SYSTEM "file:///etc/passwd"> ]>
+<stockCheck><productId>&xxe;</productId><storeId>1</storeId></stockCheck>
+```
+
+| 片段 | 作用 | 为什么需要 |
+|---|---|---|
+| `<!DOCTYPE test [ ... ]>` | 攻击者**自己加**的 DTD 声明 | 实体必须先在 DTD 里声明，才能被引用 |
+| `<!ENTITY xxe SYSTEM "file:///etc/passwd">` | 声明"xxe 的值去这个本地文件取" | `SYSTEM` 后面是 URI，解析器会真的去读 |
+| `<stockCheck>` 等外层标签 | 保持业务报文原样 | 结构不对可能被业务逻辑直接拒掉，根本到不了解析器 |
+| `&xxe;` | 在**会被回显的字段**里引用该实体 | 取到了却不回显，就变成 §6 的 Blind 场景 |
+
+> 这四段结构就是全部基本功：后面所有 payload 都只是在这上面**换地址、换编码、换外带方式**。
+
+### 1.3 为什么会存在（root cause）
+
+**正常设计意图**：XML 的定位是"跨系统交换数据"，现实中确有"文档片段放在别的文件里、由 DTD 引进来"的需求，所以规范允许**外部实体**这种写法。
+
+**开发者做错的那个假设**：*"XML 格式是我们系统内部约定的，用户只会填字段，不会动结构。"* 但解析器看到的是**用户提交的整段原始文本**——包括 `<!DOCTYPE>` 声明。**格式合法，不代表内容可信。**
+
+**攻击者怎么打破它**：
+1. 解析器把 `SYSTEM` 后面的 URI 当成"开发者写死的常量"；
+2. 但整段 DTD 来自用户输入，攻击者可以自己声明 `<!ENTITY xxe SYSTEM "file:///etc/passwd">`；
+3. 解析器忠实地**去取**这个 URI，把结果**替换进文档**，还常顺着业务逻辑回显给用户。
+
+**root cause 一句话**：**解析器把"文档里写的外部引用"当成可信指令去执行（取资源），而这段文档是攻击者可控的数据**——又是"数据越界成指令"，只是这次的载体换成了 XML 的 DTD。
+
+**代码层面长什么样**
+
+```php
+// ❌ 有问题：解析时打开了实体/DTD 相关开关
+// source：$_POST['xml_data'] 是客户端提交的原始 XML 文本，DOCTYPE 声明也夹在里面
+// sink：  simplexml_load_string() —— 一旦带了 LIBXML_NOENT（或老版本 libxml），
+//         外部实体就会被取回并替换进结果，形成"有回显"的 XXE
+$xml = simplexml_load_string($_POST['xml_data'], 'SimpleXMLElement', LIBXML_NOENT);
+echo $xml->productId;
+```
+
+```php
+// ✅ 修复：不传任何会触发实体/DTD 解析的标志位
+$dom = new DOMDocument();
+$dom->loadXML($_POST['xml_data']);   // 不传 LIBXML_NOENT / LIBXML_DTDLOAD / LIBXML_DTDVALID
+echo $dom->getElementsByTagName('productId')->item(0)->nodeValue;
+```
+
+> **审计口诀**：看到"XML 解析函数 + 用户可控的原始 XML + 显式打开了实体/DTD 标志位"这个组合就该警觉。**重点找那几个标志位**，而不是找"有没有调用禁用函数"（§8 展开）。
+
+### 1.4 语法地基：DTD 与四种实体
+
+到这里你已经知道"为什么要懂这些"，现在补语法——**所有 payload 都由它拼出来**。
+
+先看两行背景（为什么是 XML 而不是 HTML 承载这类问题）：
 
 | | XML | HTML |
 |---|---|---|
 | 目的 | **传输 / 存储**数据 | **显示**数据 |
-| 焦点 | 数据的内容 | 数据的外观 |
-| 标签 | 自己定义（`<stockCheck>`） | 预定义（`<div>`） |
 | 严格性 | 必须良构，否则解析失败 | 浏览器容错极强 |
 
-一句话：**HTML 是给浏览器看的，XML 是给程序读的**——所以"程序怎么读 XML"，就是 XXE 的全部战场。
-
-### 1.2 DTD 与四种实体（必须分清）
+**HTML 是给浏览器看的，XML 是给程序读的**——"程序怎么读 XML"，就是 XXE 的全部战场。
 
 XML 允许在文档里写一段 **DTD（Document Type Definition，文档类型定义）**，用声明语法定义"实体"。实体就是**可以被引用的变量**：
 
@@ -65,7 +128,7 @@ XML 允许在文档里写一段 **DTD（Document Type Definition，文档类型�
   <!ENTITY 外部实体 SYSTEM "file:///etc/passwd">           <!-- ② 外部实体：值是 URI -->
   <!ENTITY % 参数实体 "只在 DTD 内部用">                   <!-- ③ 参数实体：带 % 号 -->
 ]>
-<根元素>&内部实体; &外部实体; %参数实体;</根元素>
+<根元素>&内部实体; &外部实体;</根元素>
 ```
 
 四类实体，各自的关键差异：
@@ -77,9 +140,9 @@ XML 允许在文档里写一段 **DTD（Document Type Definition，文档类型�
 | **参数实体** | `<!ENTITY % a "text">` | `%a;` | **只能在 DTD 内部**引用，正文里不能用 |
 | **外部 DTD** | `<!DOCTYPE r SYSTEM "http://x/x.dtd">` 或 `<!ENTITY % d SYSTEM "...">` | `%d;` | 把整段 DTD 放到别人服务器上 |
 
-> 类比：**DTD 像"这份文档的变量表"，`SYSTEM` 像"这个变量的值去这个地址取"。** 开发者只把它当"格式化声明"用，没意识到"取值"是一次**真正的网络/文件访问**——这就是漏洞的入口。
+> 语法视角的类比：**DTD 是"这份文档的变量表"，`SYSTEM` 是"这个变量的值去这个地址取"。** 开发者只把它当"格式化声明"用，没意识到"取值"是一次**真正的网络 / 文件访问**。
 
-**一条必须记住的规范限制（所有"三层 DTD"payload 的来源）**：
+**一条必须记住的规范限制（所有"三段式 DTD"payload 的来源）**：
 > **在内部 DTD 子集里，参数实体不能出现在标记声明内部**（XML 规范 *PEs in Internal Subset*）。
 > 也就是说，下面这种"直接外带"在内联写法里是**非法的、解析会失败**：
 > ```xml
@@ -88,18 +151,7 @@ XML 允许在文档里写一段 **DTD（Document Type Definition，文档类型�
 > ```
 > 解法：把 `send` 的定义**搬到外部 DTD**（由目标去拉你的 `.dtd` 文件），因为外部 DTD 里这条限制不成立。**这就是 §6.2 那个三段式 payload 存在的原因。**
 
-### 1.3 为什么会存在（root cause）
-
-**正常设计意图**：XML 是"跨系统交换数据"的格式，现实中确实有"文档片段放在别的文件里、由 DTD 引进来"的需求，所以规范允许**外部实体**。
-
-**问题出在哪**：
-1. 解析器默认把 `SYSTEM` 的 URI 当成"可信的、由开发者写的常量"；
-2. 但 DTD 整段都来自**用户提交的 XML**——攻击者可以自己写 `<!ENTITY xxe SYSTEM "file:///etc/passwd">`；
-3. 解析器忠实地**去取**这个 URI，并把结果**替换进文档**，还经常**顺着业务逻辑回显给用户**。
-
-**root cause 一句话**：**解析器把"文档里写的外部引用"当成了可信指令去执行（取资源），而这段文档是攻击者可控的数据**——又是"数据越界成指令"，只是这次的载体是 XML 的 DTD。
-
-### 1.4 一条实测结论：为什么 PHP 站点的 XXE 比 Java 少 🟡 重要
+### 1.5 一条实测结论：为什么 PHP 站点的 XXE 比 Java 少 🟡 重要
 
 > [!note] 🔎 补充（非原笔记内容）+ 实测：本机 PHP 7.3.4 / libxml 2.9.9
 > 我把同一个 payload（`<!ENTITY xxe SYSTEM "file:///C:/Windows/win.ini">` + `&xxe;`）喂给 PHP 的两种解析方式，结果差别很大：
@@ -118,6 +170,10 @@ XML 允许在文档里写一段 **DTD（Document Type Definition，文档类型�
 
 ## 2. 危害分类 🟡 重要 —— 别说"XXE 就是 RCE"
 
+> 类比：**XXE 给攻击者的是一张"随便指、服务器替你跑腿"的口令。**
+> 指着**档案柜**说"取这份"→ 服务器把抽屉打开给你看（文件读取）；指着**隔壁办公楼**说"去看看"→ 服务器跑过去替你敲门（SSRF）；指着**值班室墙上挂钥匙的板子**→ 服务器把主钥匙拍下来给你（云元数据凭据）。
+> 类比不准的地方：真实世界里"跑腿"要受权限、网络策略、出网白名单的限制——所以同一张口令，读文件常常立刻见效，打内网和打元数据则经常被防火墙、IMDSv2 这类机制挡住。
+
 | 危害 | 机制 | 真实频度 |
 |---|---|---|
 | **任意文件读取** | 实体取 `file://` | 高（最常见、最稳） |
@@ -131,6 +187,10 @@ XML 允许在文档里写一段 **DTD（Document Type Definition，文档类型�
 ---
 
 ## 3. 黑盒发现：三类入口 🟡 重要
+
+> 类比：**找 XXE 就是在找"服务器会拆开的包裹"。**
+> ① 明摆着的快递柜（接口声明 `Content-Type: application/xml`）；② 你硬塞进去、它居然也照收的柜子（改 Content-Type 也能过）；③ 最容易漏的——**别人送来的礼品盒它要拆开检查**（上传的 SVG/DOCX 被渲染、转格式时解析）。
+> 类比不准的地方：包裹有没有被拆，你从外面看不出来——只能靠"我塞的探针有没有被处理"（§3.4）反推。
 
 ### 3.1 入口一：请求就是 XML
 
@@ -176,7 +236,7 @@ XML 允许在文档里写一段 **DTD（Document Type Definition，文档类型�
 
 | 语言 | 危险点（会解析 XML 的 API） | 备注 |
 |---|---|---|
-| **PHP** | `simplexml_load_string` / `simplexml_load_file`、`DOMDocument::loadXML`、`XMLReader::open`、`SoapClient`、`SimpleXMLElement`、`xml_parse` | 注意是否传了 `LIBXML_NOENT`（§1.4） |
+| **PHP** | `simplexml_load_string` / `simplexml_load_file`、`DOMDocument::loadXML`、`XMLReader::open`、`SoapClient`、`SimpleXMLElement`、`xml_parse` | 注意是否传了 `LIBXML_NOENT` / `LIBXML_DTDLOAD` / `LIBXML_DTDVALID`（§1.5） |
 | **Java** | `DocumentBuilderFactory`、`SAXParserFactory`、`SAXReader`(dom4j)、`XMLReader`、`Unmarshaller`(JAXB)、`TransformerFactory`、`XmlMapper`(Jackson XML) | **Java 是重灾区**，默认配置常不禁止 DTD |
 | **.NET** | `XmlDocument.Load`、`XmlReader.Create`（注意 `XmlResolver`）、`XmlSerializer`、`XmlTextReader` | `XmlResolver` 不为 null 就可能拉取外部资源 |
 | **Python** | `lxml.etree.parse/fromstring`（**老版本默认会解析外部实体**）、`xml.sax`、`xml.dom.minidom` | `defusedxml` 是官方推荐的加固库；标准库 `ElementTree` 默认安全 |
@@ -191,28 +251,26 @@ XML 允许在文档里写一段 **DTD（Document Type Definition，文档类型�
 
 ## 5. 有回显利用（最简单的一半）🟡 重要 —— 会用模板就行
 
-### 5.1 读文件
+### 5.1 读文件（模板直接用 §1.2 那份，只换地址）
 
-```xml
-<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE test [ <!ENTITY xxe SYSTEM "file:///etc/passwd"> ]>
-<stockCheck><productId>&xxe;</productId><storeId>1</storeId></stockCheck>
-```
+> 类比：这就像**点货**——你把 `file://` 后面的地址换成想看的文件，服务器取回来当面念给你听。
+> 类比不准的地方：能不能"念给你听"取决于业务有没有回显点；取不回来（无回显）就是 §6 的 Blind 场景。
 
-**逐段拆解**：
+只需要改一处：
 
-| 片段 | 作用 | 为什么需要 |
-|---|---|---|
-| `<?xml version="1.0"?>` | XML 声明 | 必须第一行；`<!DOCTYPE>` 放它后面 |
-| `<!DOCTYPE test [ ... ]>` | 内部 DTD 子集 | 只能在这里声明实体 |
-| `<!ENTITY xxe SYSTEM "file:///..."` | 定义外部实体 | `SYSTEM` = 值是 URI，解析器会去取 |
-| `&xxe;` | 引用实体 | **放在会被回显的字段里**，否则你拿不到内容 |
-| 外层业务标签 | 保持原报文结构 | 结构错了服务端可能直接拒绝，到不了解析 |
+| 想读什么 | 换成 |
+|---|---|
+| Linux 系统文件 | `file:///etc/passwd`、`file:///etc/hostname` |
+| Windows 系统文件 | `file:///C:/Windows/win.ini` |
+| 应用配置 | `file:///var/www/html/config.php`（读到的是**源码文本**，不是执行结果） |
+| 源码 / 备份 | `file:///app/www.zip`、`file:///app/.env` |
 
-> **环境前提**：解析器启用了实体展开（PHP 需 `LIBXML_NOENT`，见 §1.4；Java/.NET 多数默认会）；`file://` 目标文件**可被 Web 进程读**。
+> **环境前提**：解析器启用了实体展开（PHP 需 `LIBXML_NOENT`，见 §1.5；Java/.NET 多数默认会）；`file://` 目标文件**可被 Web 进程读**。
 > **失败最常见原因**：① `<!DOCTYPE>` 位置放错 → 解析失败；② 实体引用没落在回显字段里 → 取到了但你看不到；③ 目标文件权限不够（如 `/etc/shadow`）；④ 解析器禁了外部实体（§8）。
 
 ### 5.2 SSRF：打内网与云元数据
+
+> 类比：**让服务器替你去跑一趟腿，而它手里有门禁卡。** 你进不去的内网，它能进；你拿不到的元数据凭据，它抬头就能看见。
 
 ```xml
 <?xml version="1.0"?>
@@ -228,9 +286,14 @@ XML 允许在文档里写一段 **DTD（Document Type Definition，文档类型�
 
 ## 6. 无回显利用 🔴 核心 —— 真正的技术含量在这
 
+> 类比：**有回显的 XXE，是你问快递员"包裹里是什么"，他当面念给你听；Blind XXE，是他不肯当面说，但你可以让他"按包裹内容拼一个网址，自己去访问一下"**——你在自己网站的访问日志里，照样能拼出包裹里写的是什么。
+> 类比不准的地方：快递员至少肯跑腿（目标能出网）；如果他被关在没窗的仓库里（出网被封），你连"让他去访问"都做不到，只能改用"故意写错地址，让退件单把他的口误念出来"（§6.4）。
+
 **前提**：服务端解析了实体、也真的去取了资源，但**结果不回显**（接口只返回"成功/失败"）。此时要把数据**主动送到你能看到的地方**（带外，OOB）。
 
 ### 6.1 第一步永远先测 DNS（成本最低）
+
+> 类比：这一步等于**先按一次门铃，听屋里有没有人答话**——不指望他开门，只确认"他在家、而且听得见"。门铃响过，后面的手法才有意义。
 
 ```xml
 <?xml version="1.0" ?>
@@ -246,7 +309,10 @@ XML 允许在文档里写一段 **DTD（Document Type Definition，文档类型�
 
 ### 6.2 外部 DTD 外带（三段式，必须这么写）
 
-**为什么必须三段**：§1.2 那条规范限制——**在内部子集里，参数实体不能用于实体值**。所以 `send` 的定义必须搬到你自己服务器上的 `.dtd` 里。
+**为什么必须三段**：§1.4 那条规范限制——**在内部子集里，参数实体不能用于实体值**。所以 `send` 的定义必须搬到你自己服务器上的 `.dtd` 里。
+
+> 类比：**像寄件时"不能自己拆自己"的规矩**。你在自己家的信封里（内部 DTD）可以写"请转交某处"，但不允许当场把里层包裹拆开重装；要拆开重装，必须送到**中转站**（外部 DTD）——那里的人才有权限把"读到的文件内容"重新打包进一个新网址。
+> 这就是为什么真正的外带 payload 总是**两跳**：目标先来取你的 DTD，你的 DTD 再指挥它去访问带数据的地址。
 
 **① 发给目标的 XML**（只做两件事：拉我的 DTD、引用 `send`）：
 
@@ -281,6 +347,8 @@ file_put_contents("file.txt", $data . "\n", FILE_APPEND);
 
 ### 6.3 CDATA 包裹：读 XML 内容时的救命技巧 🟡 重要
 
+> 类比：**货物有尖角，先套一层泡沫箱再寄。** 文件内容里的 `<`、`&`、换行就是尖角，会把你的"快递单"（URL 与 DTD 结构）戳破；CDATA 就是那层泡沫。
+
 直接外带**文件内容里含 `<`、`&`、换行**时（比如读的是 `localconfig.xml`、`config.php`），URL 会被这些字符搞坏，甚至让 DTD 解析失败。做法是**用 CDATA 把内容包起来**（这是 Zimbra 真实利用里的写法，见 §9）：
 
 ```dtd
@@ -294,6 +362,9 @@ file_put_contents("file.txt", $data . "\n", FILE_APPEND);
 - **代价**：内容里如果本身含 `]]>` 会截断（少见，遇到时改用错误外带或分片读）。
 
 ### 6.4 错误解析外带（没有出网，但有报错回显）
+
+> 类比：**故意把收件地址写错**。邮局不给送（出不去网），但退件单上会印着"地址无效：×××"——那串 ××× 就是你塞进去的文件内容。
+> 类比不准的地方：只有"邮局肯把退件单给你看"（应用把解析错误回显）才成立；很多应用只会甩一个 500 白页，那就白写。
 
 ```xml
 <!DOCTYPE foo [
@@ -323,6 +394,8 @@ file_put_contents("file.txt", $data . "\n", FILE_APPEND);
 
 ### 7.1 XInclude：不能改 DTD 但能改内容时
 
+> 类比：**整份合同你改不了开头（不能加 DOCTYPE），但你能在正文里贴一张便利贴："请把这份附件原文抄在这里。"** `xi:include` 就是那张便利贴。
+
 有些应用把你的参数**嵌进一份服务端写好的 XML 里再解析**——你没法插 `<!DOCTYPE>`，但可以插 `xi:include`：
 
 ```xml
@@ -335,6 +408,8 @@ file_put_contents("file.txt", $data . "\n", FILE_APPEND);
 - **判据**：你插入的普通标签（如 `<a>1</a>`）能原样出现在服务端响应里 → 说明"内容被嵌进 XML 解析了" → 值得试 XInclude。
 
 ### 7.2 SVG 图片
+
+> 类比：**把东西藏进礼品盒，只要有人拆开检查（渲染、转缩略图、转格式）就会触发。** SVG 就是那个"会被拆开检查"的礼品盒。
 
 ```xml
 <?xml version="1.0" standalone="yes"?>
@@ -365,13 +440,15 @@ SOAP/REST/RPC 接口、XML 导入导出、RSS/Atom 订阅、文档查看器/转�
 
 | 语言 | 正确做法 | 说明 |
 |---|---|---|
-| **PHP** | **不要传 `LIBXML_NOENT`**；`LIBXML_NONET` 禁止网络；升级 libxml | 原文的 `libxml_disable_entity_loader(true)`：**PHP 8.0 起该函数已废弃**，且 libxml 2.9+ 默认不展开实体（§1.4 实测印证）。它现在更多是"心里安慰" |
+| **PHP** | **不要传 `LIBXML_NOENT` / `LIBXML_DTDLOAD` / `LIBXML_DTDVALID`**；`LIBXML_NONET` 禁止网络；升级 libxml | 原文的 `libxml_disable_entity_loader(true)`：**PHP 8.0 起该函数已废弃**，且 libxml 2.9+ 默认不展开实体（§1.5 实测印证）。它现在更多是"心里安慰" |
 | **Java** | `dbf.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true)`（最彻底）；或同时关 `external-general-entities` / `external-parameter-entities` / `load-external-dtd`，并 `setXIncludeAware(false)` | 原文只写 `setExpandEntityReferences(false)` **不够**：它只影响"引用是否展开"，部分解析器仍会去拉外部 DTD |
 | **.NET** | `XmlReaderSettings { DtdProcessing = DtdProcessing.Prohibit, XmlResolver = null }` | 关键是 `XmlResolver = null` |
 | **Python** | `lxml`：`resolve_entities=False` + `no_network=True` + `load_dtd=False`；生产建议直接用 `defusedxml` | 原文的 `resolve_entities=False` 方向对，但不完整 |
 | **通用** | 业务上不需要 DTD 的解析器，**一律禁止 DOCTYPE** | 90% 的业务 XML 根本用不到 DTD |
 
 ### 8.2 为什么"过滤关键词"不彻底
+
+> 类比：**在门口贴一张"禁止携带危险品"的告示，和把传送带直接停掉，是两件事。** 关键词过滤是告示——换个包装（编码、大小写、注释插入）就进来了；禁止 DOCTYPE 是停传送带——包裹再好也送不到拆箱台。
 
 原文方案 2：过滤 `<!DOCTYPE`、`<!ENTITY`、`SYSTEM`、`PUBLIC`。这是**黑名单**，绕过方式一串：
 
@@ -397,8 +474,8 @@ SOAP/REST/RPC 接口、XML 导入导出、RSS/Atom 订阅、文档查看器/转�
 
 **先用 5 条复述出骨架**：
 
-1. **机制**：DTD 里用 `SYSTEM` 定义的实体，值是 URI，解析器会**去取**并填入（§1.2）。
-2. **成立条件**：解析器允许解析外部实体（PHP 要 `LIBXML_NOENT`，Java/.NET 常默认允许）——这是先要确认的（§1.4）。
+1. **机制**：DTD 里用 `SYSTEM` 定义的实体，值是 URI，解析器会**去取**并填入（§1.4）。
+2. **成立条件**：解析器允许解析外部实体（PHP 要 `LIBXML_NOENT`，Java/.NET 常默认允许）——这是先要确认的（§1.5）。
 3. **两类入口**：请求体是 XML / 文件是 XML（SVG、DOCX、订阅源、导入导出）（§3）。
 4. **有回显**：把 `&xxe;` 塞进会被回显的字段，读 `file://`、打 `http://` 内网与元数据（§5）。
 5. **无回显**：先 DNS 测通道，再"外部 DTD + CDATA"把内容带到自己的服务器，或错误外带（§6）。
@@ -444,13 +521,13 @@ SOAP/REST/RPC 接口、XML 导入导出、RSS/Atom 订阅、文档查看器/转�
 
 - **云元数据能否用 XXE 打**：AWS IMDSv2 需要先 `PUT` 取 token、GCP 需要 `Metadata-Flavor` 头，普通 XXE 的 GET 可能取不到；Azure 的 GET 一般可行。**以目标云厂商文档与现场响应为准**，我在本机无法验证真实云环境。
 - **PHP 各版本默认值差异**：本机 7.3.4 / libxml 2.9.9 实测"不传 `LIBXML_NOENT` 就不展开实体"。PHP 8 起 `libxml_disable_entity_loader()` 已废弃，但**不同发行版构建的默认行为可能有差异**，以目标环境实测为准。
-- **参数实体在内部子集失败的具体报错**：本机实测 `%p;` 指向非 DTD 内容（win.ini）时解析失败，属"内容不是合法 DTD"而非"禁止"；严格规范限制见 §1.2，但各解析器实现宽松度不同。
+- **参数实体在内部子集失败的具体报错**：本机实测 `%p;` 指向非 DTD 内容（win.ini）时解析失败，属"内容不是合法 DTD"而非"禁止"；严格规范限制见 §1.4，但各解析器实现宽松度不同。
 - **XInclude 与 DOCX 链条**：仅按公开资料与课程讲解整理，**未在本机跑通**（需要真实应用与文档转换组件）。
 - **课程里"XXE 可命令执行"的说法**：已在 §2 按实际机制纠正（`expect://` 或组合链），若你的课程有具体环境，以环境为准。
 
 ## 13. 来源
 
 - 原笔记：小迪安全课程（XXE 部分）。
-- 实测：本机 `PHP 7.3.4 (NTS)` / libxml 2.9.9 上验证 SimpleXML 与 DOMDocument 在"传/不传 `LIBXML_NOENT`"两种情况下的外部实体行为（§1.4）。
+- 实测：本机 `PHP 7.3.4 (NTS)` / libxml 2.9.9 上验证 SimpleXML 与 DOMDocument 在"传/不传 `LIBXML_NOENT`"两种情况下的外部实体行为（§1.5）。
 - 核实（非大陆来源）：MITRE CVE 记录 `CVE-2019-9670`（2019-05-29）；NVD 该条目（含 CISA KEV 记录，2022-01-10）；Rapid7 Metasploit 模块 `zimbra_xxe_rce`（含 CDATA 版 DTD 写法）；ExtraHop 检测文档。
 - 相关前置：[[01_文件包含漏洞-原理与利用全集]]（同根：数据越界成指令）、[[02_任意文件下载漏洞-原理与利用全集]]（读文件的价值判断）、[[03_SSRF服务端请求伪造完整笔记]]（XXE 是 SSRF 的触发器之一）、[[00_文件上传漏洞-原理与绕过全集]]（上传后解析的二次处理面）。
